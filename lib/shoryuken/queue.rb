@@ -9,7 +9,7 @@ module Shoryuken
     end
 
     def visibility_timeout
-      client.get_queue_attributes(
+      @visibility_timeout ||= client.get_queue_attributes(
         queue_url: url,
         attribute_names: ['VisibilityTimeout']
       ).attributes['VisibilityTimeout'].to_i
