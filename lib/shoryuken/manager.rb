@@ -59,8 +59,6 @@ module Shoryuken
 
     def processor_done(queue, processor)
       watchdog('Manager#processor_done died') do
-        logger.debug { "Process done for '#{queue}'" }
-
         @threads.delete(processor.object_id)
         @busy.delete processor
 
@@ -74,7 +72,7 @@ module Shoryuken
 
     def processor_died(processor, reason)
       watchdog("Manager#processor_died died") do
-        logger.error { "Process died, reason: #{reason}" unless reason.to_s.empty? }
+        logger.error { "Process died, reason: #{reason}" } unless reason.to_s.empty?
 
         @threads.delete(processor.object_id)
         @busy.delete processor
@@ -91,8 +89,6 @@ module Shoryuken
 
     def assign(queue, sqs_msg)
       watchdog('Manager#assign died') do
-        logger.debug { "Assigning #{sqs_msg.message_id}" }
-
         processor = @ready.pop
         @busy << processor
 
@@ -109,8 +105,6 @@ module Shoryuken
     def queue_empty(queue)
       return if delay <= 0
 
-      logger.debug { "Pausing '#{queue}' for #{delay} seconds, because it's empty" }
-
       @polling_strategy.pause(queue)
 
       after(delay) { async.restart_queue!(queue) }
@@ -120,21 +114,14 @@ module Shoryuken
     def dispatch
       return if stopped?
 
-      logger.debug { "Ready: #{@ready.size}, Busy: #{@busy.size}, Active Queues: #{@polling_strategy.active_queues}" }
-
       if @ready.empty?
-        logger.debug { 'Pausing fetcher, because all processors are busy' }
-
         after(1) { dispatch }
-
         return
       end
 
       if (queue = next_queue)
         @fetcher.async.fetch(queue, @ready.size)
       else
-        logger.debug { 'Pausing fetcher, because all queues are paused' }
-
         @fetcher_paused = true
       end
     end
@@ -161,10 +148,7 @@ module Shoryuken
       @polling_strategy.restart(queue)
 
       if @fetcher_paused
-        logger.debug { 'Restarting fetcher' }
-
         @fetcher_paused = false
-
         dispatch
       end
     end
@@ -177,8 +161,6 @@ module Shoryuken
 
       if queue && (!defined?(::ActiveJob) && Shoryuken.worker_registry.workers(queue.name).empty?)
         # when no worker registered pause the queue to avoid endless recursion
-        logger.debug { "Pausing '#{queue}' for #{delay} seconds, because no workers registered" }
-
         @polling_strategy.pause(queue)
 
         after(delay) { async.restart_queue!(queue) }
