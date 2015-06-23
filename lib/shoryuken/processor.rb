@@ -5,6 +5,8 @@ module Shoryuken
     include Celluloid
     include Util
 
+    task_class TaskThread
+
     def initialize(manager)
       @manager = manager
     end

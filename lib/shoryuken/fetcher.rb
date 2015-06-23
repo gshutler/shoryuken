@@ -3,6 +3,8 @@ module Shoryuken
     include Celluloid
     include Util
 
+    task_class TaskThread
+
     FETCH_LIMIT = 10
 
     def initialize(manager)

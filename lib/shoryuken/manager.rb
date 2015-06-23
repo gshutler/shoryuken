@@ -7,6 +7,8 @@ module Shoryuken
     include Celluloid
     include Util
 
+    task_class TaskThread
+
     attr_accessor :fetcher
 
     trap_exit :processor_died
