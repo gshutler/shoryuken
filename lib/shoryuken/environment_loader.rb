@@ -45,6 +45,8 @@ module Shoryuken
     end
 
     def initialize_aws
+      Aws.eager_autoload!
+
       # aws-sdk tries to load the credentials from the ENV variables: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
       # when not explicit supplied
       return if Shoryuken.options[:aws].empty?
